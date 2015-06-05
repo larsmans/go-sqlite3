@@ -31,6 +31,7 @@ func TempFilename(t *testing.T) string {
 func doTestOpen(t *testing.T, option string) (string, error) {
 	var url string
 	tempFilename := TempFilename(t)
+	defer os.Remove(tempFilename)
 	if option != "" {
 		url = tempFilename + option
 	} else {
