@@ -6,15 +6,13 @@
 package sqlite3
 
 import (
-	"crypto/rand"
 	"database/sql"
 	"database/sql/driver"
-	"encoding/hex"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -22,15 +20,17 @@ import (
 	"github.com/mattn/go-sqlite3/sqlite3_test"
 )
 
-func TempFilename() string {
-	randBytes := make([]byte, 16)
-	rand.Read(randBytes)
-	return filepath.Join(os.TempDir(), "foo"+hex.EncodeToString(randBytes)+".db")
+func TempFilename(t *testing.T) string {
+	f, err := ioutil.TempFile("", "go-sqlite3-test-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return f.Name()
 }
 
 func doTestOpen(t *testing.T, option string) (string, error) {
 	var url string
-	tempFilename := TempFilename()
+	tempFilename := TempFilename(t)
 	if option != "" {
 		url = tempFilename + option
 	} else {
@@ -82,7 +82,7 @@ func TestOpen(t *testing.T) {
 }
 
 func TestClose(t *testing.T) {
-	tempFilename := TempFilename()
+	tempFilename := TempFilename(t)
 	db, err := sql.Open("sqlite3", tempFilename)
 	if err != nil {
 		t.Fatal("Failed to open database:", err)
@@ -108,7 +108,7 @@ func TestClose(t *testing.T) {
 }
 
 func TestInsert(t *testing.T) {
-	tempFilename := TempFilename()
+	tempFilename := TempFilename(t)
 	db, err := sql.Open("sqlite3", tempFilename)
 	if err != nil {
 		t.Fatal("Failed to open database:", err)
@@ -147,7 +147,7 @@ func TestInsert(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	tempFilename := TempFilename()
+	tempFilename := TempFilename(t)
 	db, err := sql.Open("sqlite3", tempFilename)
 	if err != nil {
 		t.Fatal("Failed to open database:", err)
@@ -212,7 +212,7 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	tempFilename := TempFilename()
+	tempFilename := TempFilename(t)
 	db, err := sql.Open("sqlite3", tempFilename)
 	if err != nil {
 		t.Fatal("Failed to open database:", err)
@@ -273,7 +273,7 @@ func TestDelete(t *testing.T) {
 }
 
 func TestBooleanRoundtrip(t *testing.T) {
-	tempFilename := TempFilename()
+	tempFilename := TempFilename(t)
 	db, err := sql.Open("sqlite3", tempFilename)
 	if err != nil {
 		t.Fatal("Failed to open database:", err)
@@ -322,7 +322,7 @@ func TestBooleanRoundtrip(t *testing.T) {
 }
 
 func TestTimestamp(t *testing.T) {
-	tempFilename := TempFilename()
+	tempFilename := TempFilename(t)
 	db, err := sql.Open("sqlite3", tempFilename)
 	if err != nil {
 		t.Fatal("Failed to open database:", err)
@@ -405,7 +405,7 @@ func TestTimestamp(t *testing.T) {
 }
 
 func TestBoolean(t *testing.T) {
-	tempFilename := TempFilename()
+	tempFilename := TempFilename(t)
 	db, err := sql.Open("sqlite3", tempFilename)
 	if err != nil {
 		t.Fatal("Failed to open database:", err)
@@ -497,7 +497,7 @@ func TestBoolean(t *testing.T) {
 }
 
 func TestFloat32(t *testing.T) {
-	tempFilename := TempFilename()
+	tempFilename := TempFilename(t)
 	db, err := sql.Open("sqlite3", tempFilename)
 	if err != nil {
 		t.Fatal("Failed to open database:", err)
@@ -535,7 +535,7 @@ func TestFloat32(t *testing.T) {
 }
 
 func TestNull(t *testing.T) {
-	tempFilename := TempFilename()
+	tempFilename := TempFilename(t)
 	db, err := sql.Open("sqlite3", tempFilename)
 	if err != nil {
 		t.Fatal("Failed to open database:", err)
@@ -567,7 +567,7 @@ func TestNull(t *testing.T) {
 }
 
 func TestTransaction(t *testing.T) {
-	tempFilename := TempFilename()
+	tempFilename := TempFilename(t)
 	db, err := sql.Open("sqlite3", tempFilename)
 	if err != nil {
 		t.Fatal("Failed to open database:", err)
@@ -627,7 +627,7 @@ func TestTransaction(t *testing.T) {
 }
 
 func TestWAL(t *testing.T) {
-	tempFilename := TempFilename()
+	tempFilename := TempFilename(t)
 	db, err := sql.Open("sqlite3", tempFilename)
 	if err != nil {
 		t.Fatal("Failed to open database:", err)
@@ -675,7 +675,7 @@ func TestWAL(t *testing.T) {
 func TestTimezoneConversion(t *testing.T) {
 	zones := []string{"UTC", "US/Central", "US/Pacific", "Local"}
 	for _, tz := range zones {
-		tempFilename := TempFilename()
+		tempFilename := TempFilename(t)
 		db, err := sql.Open("sqlite3", tempFilename+"?_loc="+url.QueryEscape(tz))
 		if err != nil {
 			t.Fatal("Failed to open database:", err)
@@ -781,7 +781,7 @@ func TestSuite(t *testing.T) {
 // TODO: Execer & Queryer currently disabled
 // https://github.com/mattn/go-sqlite3/issues/82
 func TestExecer(t *testing.T) {
-	tempFilename := TempFilename()
+	tempFilename := TempFilename(t)
 	db, err := sql.Open("sqlite3", tempFilename)
 	if err != nil {
 		t.Fatal("Failed to open database:", err)
@@ -801,7 +801,7 @@ func TestExecer(t *testing.T) {
 }
 
 func TestQueryer(t *testing.T) {
-	tempFilename := TempFilename()
+	tempFilename := TempFilename(t)
 	db, err := sql.Open("sqlite3", tempFilename)
 	if err != nil {
 		t.Fatal("Failed to open database:", err)
@@ -842,7 +842,7 @@ func TestQueryer(t *testing.T) {
 }
 
 func TestStress(t *testing.T) {
-	tempFilename := TempFilename()
+	tempFilename := TempFilename(t)
 	db, err := sql.Open("sqlite3", tempFilename)
 	if err != nil {
 		t.Fatal("Failed to open database:", err)
@@ -880,7 +880,7 @@ func TestStress(t *testing.T) {
 
 func TestDateTimeLocal(t *testing.T) {
 	zone := "Asia/Tokyo"
-	tempFilename := TempFilename()
+	tempFilename := TempFilename(t)
 	db, err := sql.Open("sqlite3", tempFilename+"?_loc="+zone)
 	if err != nil {
 		t.Fatal("Failed to open database:", err)
@@ -947,7 +947,7 @@ func TestVersion(t *testing.T) {
 }
 
 func TestNumberNamedParams(t *testing.T) {
-	tempFilename := TempFilename()
+	tempFilename := TempFilename(t)
 	db, err := sql.Open("sqlite3", tempFilename)
 	if err != nil {
 		t.Fatal("Failed to open database:", err)
@@ -983,7 +983,7 @@ func TestNumberNamedParams(t *testing.T) {
 }
 
 func TestStringContainingZero(t *testing.T) {
-	tempFilename := TempFilename()
+	tempFilename := TempFilename(t)
 	db, err := sql.Open("sqlite3", tempFilename)
 	if err != nil {
 		t.Fatal("Failed to open database:", err)
@@ -1043,7 +1043,7 @@ func (t TimeStamp) Value() (driver.Value, error) {
 }
 
 func TestDateTimeNow(t *testing.T) {
-	tempFilename := TempFilename()
+	tempFilename := TempFilename(t)
 	db, err := sql.Open("sqlite3", tempFilename)
 	if err != nil {
 		t.Fatal("Failed to open database:", err)
